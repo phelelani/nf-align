@@ -62,14 +62,14 @@ process indexRef {
 }
 
 process doQC {
-    tag { samples }
+    tag { sample }
     publishDir "${outdir}/results_qc", mode: 'copy', overwrite: true
     
     input:
     tuple val(sample), path(reads)
     
     output:
-    tuple val(sample), file("${sample}*.html"), path("${sample}*.zip"), emit: qc_out
+    tuple val(sample), path("${sample}*.html"), path("${sample}*.zip"), emit: qc_out
     
     """
     fastqc ${reads.findAll().join(' ') } --threads ${task.cpus} --noextract
@@ -86,7 +86,7 @@ process doAlignment {
     tuple val(sample), path(reads)
     
     output:
-    tuple val(sample), file("${sample}*.html"), path("${sample}*.zip"), emit: qc_out
+    tuple val(sample), path("${sample}*.{out,tab}"), path("${sample}_Aligned.out.bam"), emit: qc_out
 
     """
     STAR --runMode alignReads \
@@ -126,7 +126,7 @@ workflow RUN_ALIGNMENT {
 images = ["star", "bowtie2", "fastqc"]
 genome = file(params.outdir + '/data/genome.fa', type: 'file')
 genes  = file(params.outdir + '/data/genes.gtf', type: 'file')
-reads  = Channel.fromFilePairs(params.outdir + '/data/*.fastq.gz', size:2)
+reads  = Channel.fromFilePairs(params.outdir + "/data/*{R1,R2}.fastq.gz", size:2)
 
 // PICK AND CHOOSE
 workflow {
